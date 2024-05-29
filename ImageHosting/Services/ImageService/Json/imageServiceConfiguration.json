@@ -1,0 +1,83 @@
+{
+  "UseLocalStorage": true,
+  "LocalStorageSettings": {
+    "LocalFolderPath": "D:\\Projects\\kan-websites\\KAN11.Web\\wwwroot\\media"
+  },
+  "ImageCrops": [
+    {
+      "Alias": "Aspect-ratio-1x1-sm",
+      "Width": 480,
+      "Height": 480
+    },
+    {
+      "Alias": "Aspect-ratio-1x1-md",
+      "Width": 991,
+      "Height": 991
+    },
+    {
+      "Alias": "Aspect-ratio-13x10-sm",
+      "Width": 255,
+      "Height": 193
+    },
+    {
+      "Alias": "Aspect-ratio-2x3-sm",
+      "Width": 300,
+      "Height": 450
+    },
+    {
+      "Alias": "Full-HD-background",
+      "Width": 1920,
+      "Height": 1080
+    },
+    {
+      "Alias": "Icon",
+      "Width": 64,
+      "Height": 64
+    },
+    {
+      "Alias": "Aspect-ratio-13x20",
+      "Width": 131,
+      "Height": 200
+    },
+    {
+      "Alias": "Aspect-ratio-9x16",
+      "Width": 438,
+      "Height": 778
+    },
+    {
+      "Alias": "Logo",
+      "Width": 110,
+      "Height": 60
+    },
+    {
+      "Alias": "Profile-image",
+      "Width": 233,
+      "Height": 233
+    },
+    {
+      "Alias": "Section-item-large-image",
+      "Width": 1064,
+      "Height": 568
+    },
+    {
+      "Alias": "Section-item-medium-image",
+      "Width": 642,
+      "Height": 361
+    },
+    {
+      "Alias": "Section-episode-image",
+      "Width": 490,
+      "Height": 272
+    },
+    {
+      "Alias": "Section-item-small-image",
+      "Width": 288,
+      "Height": 162
+    },
+    {
+      "Alias": "Section-background-image",
+      "Width": 1920,
+      "Height": 840
+    }
+  ]
+}
