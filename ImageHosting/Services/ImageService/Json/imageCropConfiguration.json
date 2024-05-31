@@ -1,8 +1,4 @@
 {
-  "UseLocalStorage": true,
-  "LocalStorageSettings": {
-    "LocalFolderPath": "D:\\Projects\\kan-websites\\KAN11.Web\\wwwroot\\media"
-  },
   "ImageCrops": [
     {
       "Alias": "Aspect-ratio-1x1-sm",

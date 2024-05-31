@@ -1,5 +1,7 @@
-﻿using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
+﻿using ImageHosting.Services.ImageService.Models;
+using ImageHosting.Services.ImageStorageProviders;
+using SixLabors.ImageSharp;
+using System.Net;
 
 namespace ImageHosting.Services.ImageService
 {
@@ -9,10 +11,16 @@ namespace ImageHosting.Services.ImageService
     }
     public class ImageService : IImageService
     {
-        private readonly ImageServiceConfiguration _imageServiceConfiguration;
-        public ImageService(ImageServiceConfiguration imageServiceConfiguration)
+        private readonly ImageCropConfiguration _imageServiceConfiguration;
+        private readonly IImageStorageProvider _imageStorageProvider;
+        private readonly HttpClient _httpClient;
+        public ImageService(ImageCropConfiguration imageServiceConfiguration,
+                            HttpClient httpClient,
+                            IImageStorageProvider imageStorageProvider)
         {
             _imageServiceConfiguration = imageServiceConfiguration;
+            _httpClient = httpClient;
+            _imageStorageProvider = imageStorageProvider;
         }
         public async Task CreateImageCrops(string imagePath)
         {
@@ -21,18 +29,35 @@ namespace ImageHosting.Services.ImageService
                 return;
             }
 
-            string localImagePath = Path.Combine(Directory.GetCurrentDirectory(), "StaticImages", imagePath);
-            var taskList = _imageServiceConfiguration.ImageCrops.Select(async crop =>
+            try
             {
-                using var image = await Image.LoadAsync(localImagePath);
+                using HttpResponseMessage response = await _httpClient.GetAsync(imagePath);
 
-                image.Mutate(x => x.Resize(crop.Width, crop.Height));
+                if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    //LogDefineOptions error
+                }
 
-                string newImagePath = Path.Combine(Directory.GetCurrentDirectory(), "StaticImages", $"{crop.Alias}.png");
-                await image.SaveAsync(newImagePath);
-            }).ToArray();
+                using var stream = new MemoryStream(await response.Content.ReadAsByteArrayAsync());
+                using var image = Image.Load(stream);
+                var pathSegments = imagePath.Split('/');
+                var imageName = pathSegments.Last().Split('.').FirstOrDefault();
+                var extension = Path.GetExtension(imagePath);
 
-            await Task.WhenAll(taskList);
+                var imageToSave = new ImageSaveModel()
+                {
+                    Image = image,
+                    OriginalPath = imagePath,
+                    ImageName = imageName,
+                    ImageExtension = extension
+                };
+
+                 await _imageStorageProvider.SaveImage(imageToSave);
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
     }
 }

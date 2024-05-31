@@ -1,4 +1,5 @@
-﻿using ImageHosting.Services.ImageService;
+﻿using ImageHosting.Filters;
+using ImageHosting.Services.ImageService;
 using ImageHosting.Services.ImageStorageProviders;
 using Microsoft.AspNetCore.Mvc;
 using System.Web;
@@ -29,6 +30,7 @@ namespace ImageHosting.Controllers
         /// <returns>The image <see cref="ActionResult"/> for requested path.</returns>
         public async Task<ActionResult> GetImage(string imagePath)
         {
+            return NotFound();
             if (string.IsNullOrEmpty(imagePath))
             {
                 return NotFound();
@@ -45,7 +47,7 @@ namespace ImageHosting.Controllers
             var request = new ImageRequestModel()
             {
                 FolderName = urlParts.FirstOrDefault(),
-                ImageName = queryParts.FirstOrDefault()
+                ImageName =  HttpUtility.UrlDecode(queryParts.FirstOrDefault())
             };
 
             if (queryParts.Length >1)
@@ -68,6 +70,7 @@ namespace ImageHosting.Controllers
         }
 
         [HttpGet]
+        [ImageProcessAuthorizationAttribute]
         public async Task AddImageCrops(string imagePath)
         {
             await _imageService.CreateImageCrops(imagePath);
