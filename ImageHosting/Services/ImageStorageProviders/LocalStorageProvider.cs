@@ -18,19 +18,14 @@ namespace ImageHosting.Services.ImageStorageProviders
             _imageCropConfiguration = imageCropConfiguration;
         }
         #region public methods
-        public async Task<byte[]?> GetImage(ImageRequestModel request)
+        public async Task<byte[]?> GetImage(ImageRequestModel model)
         {
             try
             {
-                var imageNameWithCrops = request.GetImageNameWithCrops();
-                var imageBytes = await GetImageByName(request.FolderName, imageNameWithCrops);
+                var folder = GetFolder(model.OriginalPath);
+                var imageStorageFileName = ImageNameExtension.GetImageNameWithCrops(Path.Combine(folder, model.ImageName), model.Width, model.Height, model.ImageExtension);
 
-                if (imageBytes != null)
-                {
-                    return imageBytes;
-                }
-
-                imageBytes = await GetImageByName(request.FolderName, request.ImageName);
+                var imageBytes = await System.IO.File.ReadAllBytesAsync(imageStorageFileName);
 
                 return imageBytes;
             }
@@ -52,8 +47,8 @@ namespace ImageHosting.Services.ImageStorageProviders
             var taskList = _imageCropConfiguration.ImageCrops.Select(async crop =>
             {
                 model.Image.Mutate(x => x.Resize(crop.Width, crop.Height));
-                string fileName = string.Format("{0}_width={1}_height={2}.{3}", model.ImageName, crop.Width, crop.Height, model.ImageExtension);
-                string newImagePath = Path.Combine(Directory.GetCurrentDirectory(), folder, fileName);
+                string fileName = ImageNameExtension.GetImageNameWithCrops(model.ImageName, crop.Width, crop.Height, model.ImageExtension);
+                string newImagePath = Path.Combine(folder, fileName);
                 await model.Image.SaveAsync(newImagePath);
             }).ToArray();
 

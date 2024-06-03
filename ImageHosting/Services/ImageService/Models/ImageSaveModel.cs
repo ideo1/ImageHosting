@@ -2,11 +2,8 @@
 
 namespace ImageHosting.Services.ImageService.Models
 {
-    public class ImageSaveModel
+    public class ImageSaveModel: ImageRequestBase
     {
         public Image? Image { get; set; }
-        public string OriginalPath { get; set; }
-        public string ImageName { get; set; }
-        public string ImageExtension { get; set; }
     }
 }

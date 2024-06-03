@@ -12,7 +12,6 @@ namespace ImageHosting.Controllers
     {
         private readonly ILogger<ImageDeliveryController> _logger;
         private readonly IImageService _imageService;
-        private readonly IImageStorageProvider _imageStorageProvider;
 
         public ImageDeliveryController(ILogger<ImageDeliveryController> logger,
                                        IImageService imageService,
@@ -20,7 +19,6 @@ namespace ImageHosting.Controllers
         {
             _logger = logger;
             _imageService = imageService;
-            _imageStorageProvider = imageStorageProvider;
         }
         [HttpGet]
         /// <summary>
@@ -30,36 +28,12 @@ namespace ImageHosting.Controllers
         /// <returns>The image <see cref="ActionResult"/> for requested path.</returns>
         public async Task<ActionResult> GetImage(string imagePath)
         {
-            return NotFound();
             if (string.IsNullOrEmpty(imagePath))
             {
                 return NotFound();
             }
-
-            var urlParts = imagePath.Split(new char[] { '/'}, StringSplitOptions.RemoveEmptyEntries);
-
-            if (urlParts.Length < 2)
-            {
-                return BadRequest();
-            }
-
-            var queryParts = urlParts.LastOrDefault(imagePath).Split(new char[] { '?' }, StringSplitOptions.RemoveEmptyEntries);
-            var request = new ImageRequestModel()
-            {
-                FolderName = urlParts.FirstOrDefault(),
-                ImageName =  HttpUtility.UrlDecode(queryParts.FirstOrDefault())
-            };
-
-            if (queryParts.Length >1)
-            {
-                var queryParameters = HttpUtility.ParseQueryString(queryParts.LastOrDefault());
-                int.TryParse(queryParameters.Get("width"), out var width);
-                int.TryParse(queryParameters.Get("height"), out var height);
-                request.Height = height;
-                request.Width = width;
-            }
-
-            var image = await _imageStorageProvider.GetImage(request);
+            
+            var image = await _imageService.GetImage(imagePath);
 
             if (image == null)
             {
