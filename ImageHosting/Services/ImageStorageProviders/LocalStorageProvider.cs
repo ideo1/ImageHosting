@@ -2,7 +2,9 @@
 using ImageHosting.Services.ImageService;
 using ImageHosting.Services.ImageService.Models;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Processing;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ImageHosting.Services.ImageStorageProviders
 {
@@ -43,13 +45,21 @@ namespace ImageHosting.Services.ImageStorageProviders
             }
 
             var folder = GetFolder(model.OriginalPath);
+            var originalFilePath = Path.Combine(folder, string.Format("{0}{1}", model.ImageName, model.ImageExtension));
+
+            if (File.Exists(originalFilePath))
+            {
+                return;
+            }
+
+            await model.Image.SaveAsync(originalFilePath); 
 
             var taskList = _imageCropConfiguration.ImageCrops.Select(async crop =>
             {
-                model.Image.Mutate(x => x.Resize(crop.Width, crop.Height));
+                using var copy = model.Image.Clone(x => x.Resize(crop.Width, crop.Height));
                 string fileName = ImageNameExtension.GetImageNameWithCrops(model.ImageName, crop.Width, crop.Height, model.ImageExtension);
                 string newImagePath = Path.Combine(folder, fileName);
-                await model.Image.SaveAsync(newImagePath);
+                await copy.SaveAsync(newImagePath);
             }).ToArray();
 
             await Task.WhenAll(taskList);
