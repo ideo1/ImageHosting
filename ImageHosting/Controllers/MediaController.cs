@@ -21,7 +21,7 @@ namespace ImageHosting.Controllers
                 return NotFound();
             }
 
-            var image = await _imageService.GetImage(Request.Path);
+            var image = await _imageService.GetImage(Uri.UnescapeDataString(Request.Path));
 
             if (image == null)
             {
