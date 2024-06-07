@@ -74,6 +74,11 @@
       "Alias": "Section-background-image",
       "Width": 1920,
       "Height": 840
+    },
+    {
+      "Alias": "Banner-desktop-fullscreen",
+      "Width": 1920,
+      "Height": 0
     }
   ]
 }

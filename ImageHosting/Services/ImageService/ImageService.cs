@@ -1,10 +1,9 @@
 ﻿using ImageHosting.Services.ImageService.Models;
 using ImageHosting.Services.ImageStorageProviders;
-using Microsoft.Extensions.FileSystemGlobbing.Internal;
 using SixLabors.ImageSharp;
-using System;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Web;
 
 namespace ImageHosting.Services.ImageService
 {
@@ -66,7 +65,8 @@ namespace ImageHosting.Services.ImageService
 
         public async Task<byte[]?> GetImage(string imagePath)
         {
-            var imageNameSegment = imagePath.Split('/').LastOrDefault();
+            var decodedPath = HttpUtility.UrlDecode(imagePath);
+            var imageNameSegment = decodedPath.Split('/').LastOrDefault();
             Match match = Regex.Match(imageNameSegment, _imageNamePattern);
 
             if (!match.Success)
