@@ -1,8 +1,8 @@
-﻿using ImageHosting.Filters;
+﻿using ImageHosting.Extensions;
+using ImageHosting.Filters;
 using ImageHosting.Services.ImageService;
 using ImageHosting.Services.ImageStorageProviders;
 using Microsoft.AspNetCore.Mvc;
-using System.Web;
 
 namespace ImageHosting.Controllers
 {
@@ -40,7 +40,7 @@ namespace ImageHosting.Controllers
                 return NotFound();
             }
 
-            return File(image, GetContentType(imagePath), imagePath);
+            return File(image, imagePath.GetContentType(), imagePath);
         }
 
         [HttpGet]
@@ -48,26 +48,6 @@ namespace ImageHosting.Controllers
         public async Task AddImageCrops(string imagePath)
         {
             await _imageService.CreateImageCrops(imagePath);
-        }
-
-        private string GetContentType(string filePath)
-        {
-            string? extension = Path.GetExtension(filePath)?.ToLowerInvariant();
-
-            switch (extension)
-            {
-                case ".jpg":
-                case ".jpeg":
-                    return "image/jpeg";
-                case ".png":
-                    return "image/png";
-                case ".gif":
-                    return "image/gif";
-                case ".bmp":
-                    return "image/bmp";
-                default:
-                    return "application/octet-stream";
-            }
         }
     }
 }
