@@ -15,20 +15,23 @@ namespace ImageHosting.Services.ImageService
     public class ImageService : IImageService
     {
         private const string _imageNamePattern = @"(?<filename>.+)\.(?<ext>[^.?]+)(?:\?width=(?<width>\d+))?(?:&height=(?<height>\d+))?";
-        private readonly ImageCropConfiguration _imageServiceConfiguration;
+        private readonly ImageCropConfiguration _imageCropConfiguration;
         private readonly IImageStorageProvider _imageStorageProvider;
+        private readonly ImageServiceConfiguration _imageServiceConfiguration;
         private readonly HttpClient _httpClient;
-        public ImageService(ImageCropConfiguration imageServiceConfiguration,
+        public ImageService(ImageCropConfiguration imageCropConfiguration,
                             HttpClient httpClient,
-                            IImageStorageProvider imageStorageProvider)
+                            IImageStorageProvider imageStorageProvider,
+                            ImageServiceConfiguration imageServiceConfiguration)
         {
-            _imageServiceConfiguration = imageServiceConfiguration;
+            _imageCropConfiguration = imageCropConfiguration;
             _httpClient = httpClient;
             _imageStorageProvider = imageStorageProvider;
+            _imageServiceConfiguration = imageServiceConfiguration;
         }
         public async Task CreateImageCrops(string imagePath)
         {
-            if (_imageServiceConfiguration.ImageCrops == null || !_imageServiceConfiguration.ImageCrops.Any())
+            if (_imageCropConfiguration.ImageCrops == null || !_imageCropConfiguration.ImageCrops.Any())
             {
                 return;
             }
@@ -89,6 +92,14 @@ namespace ImageHosting.Services.ImageService
             };
 
             var res = await _imageStorageProvider.GetImage(model);
+
+            if (res != null && !_imageServiceConfiguration.CreateIfNotExists)
+            {
+                return res;
+            }
+
+            await CreateImageCrops(imagePath);
+            res = await _imageStorageProvider.GetImage(model);
 
             return res;
         }

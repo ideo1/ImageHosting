@@ -2,9 +2,7 @@
 using ImageHosting.Services.ImageService;
 using ImageHosting.Services.ImageService.Models;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Processing;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ImageHosting.Services.ImageStorageProviders
 {

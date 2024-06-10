@@ -4,6 +4,7 @@
     {
         public const string ConfigurationName = "ImageService";
         public bool UseLocalStorage { get; set; }
+        public bool CreateIfNotExists { get; set; }
         public LocalStorageSettings LocalStorageSettings { get; set; }
         public UmbracoSettings UmbracoSettings { get; set; }
         public Authorize Authorize { get; set; }
