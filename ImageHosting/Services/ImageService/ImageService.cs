@@ -11,6 +11,7 @@ namespace ImageHosting.Services.ImageService
     {
         Task CreateImageCrops(string imagePath);
         Task<byte[]?> GetImage(string imagePath);
+        Task CreateImageCrops(ImageMigrationRequestModel request);
     }
     public class ImageService : IImageService
     {
@@ -19,15 +20,18 @@ namespace ImageHosting.Services.ImageService
         private readonly IImageStorageProvider _imageStorageProvider;
         private readonly ImageServiceConfiguration _imageServiceConfiguration;
         private readonly HttpClient _httpClient;
+        private readonly ILogger<ImageService> _logger;
         public ImageService(ImageCropConfiguration imageCropConfiguration,
                             HttpClient httpClient,
                             IImageStorageProvider imageStorageProvider,
-                            ImageServiceConfiguration imageServiceConfiguration)
+                            ImageServiceConfiguration imageServiceConfiguration,
+                            ILogger<ImageService> logger)
         {
             _imageCropConfiguration = imageCropConfiguration;
             _httpClient = httpClient;
             _imageStorageProvider = imageStorageProvider;
             _imageServiceConfiguration = imageServiceConfiguration;
+            _logger = logger;
         }
         public async Task CreateImageCrops(string imagePath)
         {
@@ -42,7 +46,7 @@ namespace ImageHosting.Services.ImageService
 
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
-                    //LogDefineOptions error
+                    _logger.LogError($"{nameof(CreateImageCrops)} http request error. Error code {response.StatusCode}. Imahe path {imagePath}");
                 }
 
                 using var stream = new MemoryStream(await response.Content.ReadAsByteArrayAsync());
@@ -63,6 +67,7 @@ namespace ImageHosting.Services.ImageService
             }
             catch (Exception ex)
             {
+                _logger.LogError($"{nameof(CreateImageCrops)} exception. Error message {ex.Message}.");
             }
         }
 
@@ -102,6 +107,14 @@ namespace ImageHosting.Services.ImageService
             res = await _imageStorageProvider.GetImage(model);
 
             return res;
+        }
+
+        public async Task CreateImageCrops(ImageMigrationRequestModel model)
+        {
+            for (int i = 0; i < model.NumberOfPagesToProcess; i++)
+            {
+                _logger.LogWarning($"Process page { model.StartPageNumber + i}");
+            }
         }
     }
 }

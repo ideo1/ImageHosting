@@ -1,8 +1,10 @@
 ﻿using ImageHosting.Extensions;
 using ImageHosting.Filters;
 using ImageHosting.Services.ImageService;
+using ImageHosting.Services.ImageService.Models;
 using ImageHosting.Services.ImageStorageProviders;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace ImageHosting.Controllers
 {
@@ -48,6 +50,29 @@ namespace ImageHosting.Controllers
         public async Task AddImageCrops(string imagePath)
         {
             await _imageService.CreateImageCrops(imagePath);
+        }
+        [HttpGet]
+        public async Task<ActionResult> ImportImages([FromQuery]ImageMigrationRequestModel requestModel, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            //var options = new ParallelOptions()
+            //{
+            //    MaxDegreeOfParallelism = 20
+            //};
+
+            try
+            {
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }
