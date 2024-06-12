@@ -50,8 +50,9 @@ namespace ImageHosting.Services.ImageStorageProviders
                 return;
             }
 
+            //need to save original image also
             await model.Image.SaveAsync(originalFilePath); 
-
+            
             var taskList = _imageCropConfiguration.ImageCrops.Select(async crop =>
             {
                 using var copy = model.Image.Clone(x => x.Resize(crop.Width, crop.Height));

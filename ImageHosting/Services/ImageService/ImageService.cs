@@ -1,5 +1,7 @@
 ﻿using ImageHosting.Services.ImageService.Models;
 using ImageHosting.Services.ImageStorageProviders;
+using Microsoft.AspNetCore.WebUtilities;
+using Newtonsoft.Json;
 using SixLabors.ImageSharp;
 using System.Net;
 using System.Text.RegularExpressions;
@@ -11,7 +13,7 @@ namespace ImageHosting.Services.ImageService
     {
         Task CreateImageCrops(string imagePath);
         Task<byte[]?> GetImage(string imagePath);
-        Task CreateImageCrops(ImageMigrationRequestModel request);
+        Task ImportImagesWithCrops(int pageNumber, CancellationToken cancellationToken);
     }
     public class ImageService : IImageService
     {
@@ -46,7 +48,9 @@ namespace ImageHosting.Services.ImageService
 
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
-                    _logger.LogError($"{nameof(CreateImageCrops)} http request error. Error code {response.StatusCode}. Imahe path {imagePath}");
+                    _logger.LogError($"{nameof(CreateImageCrops)} http request error. Error code {response.StatusCode}. Image path {imagePath}");
+
+                    return;
                 }
 
                 using var stream = new MemoryStream(await response.Content.ReadAsByteArrayAsync());
@@ -98,7 +102,7 @@ namespace ImageHosting.Services.ImageService
 
             var res = await _imageStorageProvider.GetImage(model);
 
-            if (res != null && !_imageServiceConfiguration.CreateIfNotExists)
+            if (res != null || !_imageServiceConfiguration.CreateIfNotExists)
             {
                 return res;
             }
@@ -109,12 +113,51 @@ namespace ImageHosting.Services.ImageService
             return res;
         }
 
-        public async Task CreateImageCrops(ImageMigrationRequestModel model)
+        public async Task ImportImagesWithCrops(int pageNumber, CancellationToken cancellationToken)
         {
-            for (int i = 0; i < model.NumberOfPagesToProcess; i++)
+            var queryParameters = new List<KeyValuePair<string, string>>
             {
-                _logger.LogWarning($"Process page { model.StartPageNumber + i}");
+                 new KeyValuePair<string, string>("pageNumber", pageNumber.ToString())
+            };
+
+            var queryString = QueryHelpers.AddQueryString(_imageServiceConfiguration.UmbracoSettings.MigrationEndpoint, queryParameters);
+            using HttpResponseMessage response = await _httpClient.GetAsync(queryString);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                _logger.LogError($"{nameof(ImportImagesWithCrops)} http request error. Error code {response.StatusCode}. Page number {pageNumber}");
+
+                return;
             }
+
+            var res = await response.Content.ReadAsStringAsync();
+
+            if (string.IsNullOrEmpty(res))
+            {
+                _logger.LogWarning($"{nameof(ImportImagesWithCrops)} response is empty. Page number {pageNumber}");
+
+                return;
+            }
+
+            var responseData = JsonConvert.DeserializeObject<ImageMigrationResponseModel>(res);
+
+            if (responseData == null || responseData.ImageUrls == null || !responseData.ImageUrls.Any())
+            {
+                _logger.LogWarning($"{nameof(ImportImagesWithCrops)} response has no element. Page number {pageNumber}");
+
+                return;
+            }
+
+            var options = new ParallelOptions()
+            {
+                MaxDegreeOfParallelism = _imageServiceConfiguration.UmbracoSettings.MaxDegreeOfParallelism
+            };
+
+            await Parallel.ForEachAsync(responseData.ImageUrls, options, async (url, cancellationToken) =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await CreateImageCrops(url);
+            });
         }
     }
 }
