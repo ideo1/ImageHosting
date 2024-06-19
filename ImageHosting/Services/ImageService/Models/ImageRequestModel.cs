@@ -4,5 +4,6 @@
     {
         public int Height { get; set; } = 0;
         public int Width { get; set; } = 0;
+        public Watermark Watermark { get; set; }
     }
 }

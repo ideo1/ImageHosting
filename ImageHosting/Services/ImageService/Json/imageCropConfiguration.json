@@ -79,6 +79,49 @@
       "Alias": "Banner-desktop-fullscreen",
       "Width": 1920,
       "Height": 0
+    },
+    {
+      "Alias": "Og-image",
+      "Width": 1200,
+      "Height": 630
+    },
+    {
+      "Alias": "Image-block-mobile",
+      "Width": 992,
+      "Height": 0
+    },
+    {
+      "Alias": "Mobile-468",
+      "Width": 468,
+      "Height": 0
+    },
+    {
+      "Alias": "Mobile-480",
+      "Width": 480,
+      "Height": 0
+    },
+    {
+      "Alias": "Mobile-480-1x1",
+      "Width": 480,
+      "Height": 480
+    },
+    {
+      "Alias": "Mobile-480-1x1-with-play",
+      "Width": 480,
+      "Height": 480,
+      "Watermark": {
+        "QuerySegmentName": "category",
+        "ImageName": "icon-play-thumbnails"
+      }
+    },
+    {
+      "Alias": "Mobile-480-1x1-with-microphone",
+      "Width": 480,
+      "Height": 480,
+      "Watermark": {
+        "QuerySegmentName": "category",
+        "ImageName": "icon-microphone-thumbnails"
+      }
     }
   ]
 }

@@ -17,7 +17,8 @@ namespace ImageHosting.Services.ImageService
     }
     public class ImageService : IImageService
     {
-        private const string _imageNamePattern = @"(?<filename>.+)\.(?<ext>[^.?]+)(?:\?width=(?<width>\d+))?(?:&height=(?<height>\d+))?";
+        private const string _imageNamePattern = @"^\/media\/[a-zA-Z0-9_-]+\/(?<filename>.+)\.(?<ext>[^.?]+)(?:\?width=(?<width>\d+))?(?:&height=(?<height>\d+))";
+        private const string _categorySubstring = @"&category=images/";
         private readonly ImageCropConfiguration _imageCropConfiguration;
         private readonly IImageStorageProvider _imageStorageProvider;
         private readonly ImageServiceConfiguration _imageServiceConfiguration;
@@ -78,8 +79,7 @@ namespace ImageHosting.Services.ImageService
         public async Task<byte[]?> GetImage(string imagePath)
         {
             var decodedPath = HttpUtility.UrlDecode(imagePath);
-            var imageNameSegment = decodedPath.Split('/').LastOrDefault();
-            Match match = Regex.Match(imageNameSegment, _imageNamePattern);
+            Match match = Regex.Match(decodedPath, _imageNamePattern);
 
             if (!match.Success)
             {
@@ -97,8 +97,19 @@ namespace ImageHosting.Services.ImageService
                 Width = width,
                 ImageExtension = string.Format(".{0}", extension),
                 ImageName = fileName,
-                OriginalPath = imagePath
-            };
+                OriginalPath = imagePath.Split('?')?.FirstOrDefault()
+            }; 
+
+            var categorySegments = decodedPath.Split(new string[] { _categorySubstring }, StringSplitOptions.None);
+
+            if (categorySegments.Length == 2)
+            {
+                model.Watermark = new Watermark
+                {
+                    QuerySegmentName = "category",
+                    ImageName = categorySegments.LastOrDefault()?.Split('.')?.FirstOrDefault()
+                };
+            }
 
             var res = await _imageStorageProvider.GetImage(model);
 
@@ -107,7 +118,7 @@ namespace ImageHosting.Services.ImageService
                 return res;
             }
 
-            await CreateImageCrops(imagePath);
+            await CreateImageCrops(model.OriginalPath);
             res = await _imageStorageProvider.GetImage(model);
 
             return res;

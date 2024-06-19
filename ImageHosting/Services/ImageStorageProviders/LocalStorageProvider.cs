@@ -23,8 +23,7 @@ namespace ImageHosting.Services.ImageStorageProviders
             try
             {
                 var folder = GetFolder(model.OriginalPath);
-                var imageStorageFileName = ImageNameExtension.GetImageNameWithCrops(Path.Combine(folder, model.ImageName), model.Width, model.Height, model.ImageExtension);
-
+                var imageStorageFileName = ImageNameExtension.GetImageNameWithCrops(Path.Combine(folder, model.ImageName), model.Width, model.Height, model.ImageExtension, model.Watermark);
                 var imageBytes = await System.IO.File.ReadAllBytesAsync(imageStorageFileName);
 
                 return imageBytes;
@@ -55,9 +54,24 @@ namespace ImageHosting.Services.ImageStorageProviders
             
             var taskList = _imageCropConfiguration.ImageCrops.Select(async crop =>
             {
-                using var copy = model.Image.Clone(x => x.Resize(crop.Width, crop.Height));
-                string fileName = ImageNameExtension.GetImageNameWithCrops(model.ImageName, crop.Width, crop.Height, model.ImageExtension);
+                var options = new ResizeOptions()
+                {
+                    Size = new Size(crop.Width, crop.Height),
+                    Mode = ResizeMode.Crop
+                };
+
+                using var copy = model.Image.Clone(x => x.Resize(options));
+                string fileName = ImageNameExtension.GetImageNameWithCrops(model.ImageName, crop.Width, crop.Height, model.ImageExtension, crop.Watermark);
                 string newImagePath = Path.Combine(folder, fileName);
+
+                if (crop.Watermark != null)
+                {
+                    var path = Path.Combine("StaticImages", "Watemarks", string.Format("{0}.png", crop.Watermark.ImageName));
+                    using var waterMarkImage = SixLabors.ImageSharp.Image.Load(path);
+                    copy.Mutate(x => x.DrawImage(
+                        waterMarkImage, new Point(copy.Width - 5 - waterMarkImage.Width, copy.Height - waterMarkImage.Height - 5), 1));
+                }
+
                 await copy.SaveAsync(newImagePath);
             }).ToArray();
 
